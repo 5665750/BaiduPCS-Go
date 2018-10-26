@@ -7,7 +7,19 @@
 
 This project was largely inspired by [GangZhuo/BaiduPCS](https://github.com/GangZhuo/BaiduPCS)
 
+## 解决错误代码4, No permission to do this operation
+```
+BaiduPCS-Go config set -appid 266719
+```
+
+详见讨论 [#387](https://github.com/iikira/BaiduPCS-Go/issues/387)
+
+## 注意
+
+此文档只针对于最新的commit, 可能不适用于已发布的最新版本.
+
 <!-- toc -->
+## 目录
 
 - [特色](#特色)
 - [编译/交叉编译 说明](#编译交叉编译-说明)
@@ -17,8 +29,10 @@ This project was largely inspired by [GangZhuo/BaiduPCS](https://github.com/Gang
   * [Android / iOS](#android--ios)
 - [命令列表及说明](#命令列表及说明)
   * [注意 ! ! !](#注意---)
+  * [检测程序更新](#检测程序更新)
   * [登录百度帐号](#登录百度帐号)
   * [列出帐号列表](#列出帐号列表)
+  * [获取当前帐号](#获取当前帐号)
   * [切换百度帐号](#切换百度帐号)
   * [退出百度帐号](#退出百度帐号)
   * [获取网盘配额](#获取网盘配额)
@@ -27,8 +41,10 @@ This project was largely inspired by [GangZhuo/BaiduPCS](https://github.com/Gang
   * [列出目录](#列出目录)
   * [列出目录树形图](#列出目录树形图)
   * [获取单个文件/目录的元信息](#获取单个文件目录的元信息)
+  * [搜索文件](#搜索文件)
   * [下载文件/目录](#下载文件目录)
   * [上传文件/目录](#上传文件目录)
+  * [获取下载直链](#获取下载直链)
   * [手动秒传文件](#手动秒传文件)
   * [获取本地文件的秒传信息](#获取本地文件的秒传信息)
   * [导出文件/目录](#导出文件目录)
@@ -36,6 +52,10 @@ This project was largely inspired by [GangZhuo/BaiduPCS](https://github.com/Gang
   * [删除文件/目录](#删除文件目录)
   * [拷贝文件/目录](#拷贝文件目录)
   * [移动/重命名文件/目录](#移动重命名文件目录)
+  * [分享文件/目录](#分享文件目录)
+    + [设置分享文件/目录](#设置分享文件目录)
+    + [列出已分享文件/目录](#列出已分享文件目录)
+    + [取消分享文件/目录](#取消分享文件目录)
   * [离线下载](#离线下载)
     + [添加离线下载任务](#添加离线下载任务)
     + [精确查询离线下载任务](#精确查询离线下载任务)
@@ -67,9 +87,9 @@ This project was largely inspired by [GangZhuo/BaiduPCS](https://github.com/Gang
 
 通配符匹配网盘路径和 Tab 自动补齐命令和路径, [通配符_百度百科](https://baike.baidu.com/item/通配符);
 
-[下载](#下载文件或目录)网盘内文件, 支持多个文件或目录下载, 支持断点续传和单文件并行下载;
+[下载](#下载文件目录)网盘内文件, 支持多个文件或目录下载, 支持断点续传和单文件并行下载;
 
-[上传](#上传文件或目录)2GB以内的文件, 支持多个文件或目录上传;
+[上传](#上传文件目录)本地文件, 支持上传大文件(>2GB), 支持多个文件或目录上传;
 
 [离线下载](#离线下载), 支持http/https/ftp/电驴/磁力链协议.
 
@@ -126,6 +146,11 @@ cli交互模式下, 光标所在行的前缀应为 `BaiduPCS-Go >`, 如果登录
 
 cli交互模式已支持按tab键自动补全命令和路径.
 
+## 检测程序更新
+```
+BaiduPCS-Go update
+```
+
 ## 登录百度帐号
 
 ### 常规登录百度帐号
@@ -158,7 +183,13 @@ BaiduPCS-Go login
 BaiduPCS-Go loglist
 ```
 
-获取当前帐号, 和所有已登录的百度帐号
+列出所有已登录的百度帐号
+
+## 获取当前帐号
+
+```
+BaiduPCS-Go who
+```
 
 ## 切换百度帐号
 
@@ -231,9 +262,28 @@ BaiduPCS-Go ls
 BaiduPCS-Go ls <目录>
 ```
 
+### 可选参数
+```
+-asc: 升序排序
+-desc: 降序排序
+-time: 根据时间排序
+-name: 根据文件名排序
+-size: 根据大小排序
+```
+
 #### 例子
 ```
+# 列出 我的资源 内的文件和目录
 BaiduPCS-Go ls 我的资源
+
+# 绝对路径
+BaiduPCS-Go ls /我的资源
+
+# 降序排序
+BaiduPCS-Go ls -desc 我的资源
+
+# 按文件大小降序排序
+BaiduPCS-Go ls -size -desc 我的资源
 
 # 使用通配符
 BaiduPCS-Go ls /我的*
@@ -266,6 +316,28 @@ BaiduPCS-Go meta 我的资源
 BaiduPCS-Go meta /
 ```
 
+## 搜索文件
+
+按文件名搜索文件（不支持查找目录）。
+
+默认在当前工作目录搜索.
+
+```
+BaiduPCS-Go search [-path=<需要检索的目录>] [-r] <关键字>
+```
+
+#### 例子
+```
+# 搜索根目录的文件
+BaiduPCS-Go search -path=/ 关键字
+
+# 搜索当前工作目录的文件
+BaiduPCS-Go search 关键字
+
+# 递归搜索当前工作目录的文件
+BaiduPCS-Go search -r 关键字
+```
+
 ## 下载文件/目录
 ```
 BaiduPCS-Go download <网盘文件或目录的路径1> <文件或目录2> <文件或目录3> ...
@@ -274,12 +346,15 @@ BaiduPCS-Go d <网盘文件或目录的路径1> <文件或目录2> <文件或目
 
 ### 可选参数
 ```
--test: 测试下载, 此操作不会保存文件到本地
--status: 输出所有线程的工作状态
---save: 将下载的文件直接保存到当前工作目录
---saveto: 将下载的文件直接保存到指定的目录
--x: 为文件加上执行权限, (windows系统无效)
--p <num>: 指定下载的最大并发量
+  --test          测试下载, 此操作不会保存文件到本地
+  --ow            overwrite, 覆盖已存在的文件
+  --status        输出所有线程的工作状态
+  --save          将下载的文件直接保存到当前工作目录
+  --saveto value  将下载的文件直接保存到指定的目录
+  -x              为文件加上执行权限, (windows系统无效)
+  --share         以分享文件的方式获取下载链接来下载
+  --locate        以获取直链的方式来下载
+  -p value        指定下载线程数
 ```
 
 支持多个文件或目录的下载.
@@ -311,11 +386,20 @@ BaiduPCS-Go upload <本地文件/目录的路径1> <文件/目录2> <文件/目�
 BaiduPCS-Go u <本地文件/目录的路径1> <文件/目录2> <文件/目录3> ... <目标目录>
 ```
 
-* 上传的文件将会保存到, <目标目录>.
+* 上传默认采用分片上传的方式, 上传的文件将会保存到, <目标目录>.
 
 * 遇到同名文件将会自动覆盖!!
 
 * 当上传的文件名和网盘的目录名称相同时, 不会覆盖目录, 防止丢失数据.
+
+
+#### 注意:
+
+* 分片上传之后, 服务器可能会记录到错误的文件md5, 程序会在上传完成后的修复md5, 修复md5不一定能成功, 但文件的完整性是没问题的.
+
+* 禁用分片上传可以保证服务器记录到正确的md5.
+
+* 禁用分片上传时只能使用单线程上传, 指定的单个文件上传最大线程数将会无效.
 
 #### 例子:
 ```
@@ -328,6 +412,18 @@ BaiduPCS-Go upload C:/Users/Administrator/Desktop/1.mp4 C:/Users/Administrator/D
 
 # 将本地的 C:\Users\Administrator\Desktop 整个目录上传到网盘 /视频 目录
 BaiduPCS-Go upload C:/Users/Administrator/Desktop /视频
+```
+
+## 获取下载直链
+```
+BaiduPCS-Go locate <文件1> <文件2> ...
+```
+
+#### 注意
+
+若该功能无法正常使用, 提示`user is not authorized, hitcode:101`, 尝试更换 User-Agent 为 `netdisk`:
+```
+BaiduPCS-Go config set -user_agent "netdisk"
 ```
 
 ## 手动秒传文件
@@ -373,15 +469,19 @@ BaiduPCS-Go ep <文件/目录1> <文件/目录2> ...
 
 导出网盘内的文件或目录, 原理为秒传文件, 此操作会生成导出文件或目录的命令.
 
+#### 注意
+
+并不是所有的文件都能导出成功, 程序会列出无法导出的文件列表
+
 #### 例子:
 ```
 # 导出当前工作目录:
 BaiduPCS-Go export
 
-# 导出所有文件和目录, 并设置新的根目录为 `/root`
+# 导出所有文件和目录, 并设置新的根目录为 /root
 BaiduPCS-Go export -root=/root /
 
-# 导出 `/我的资源`
+# 导出 /我的资源
 BaiduPCS-Go export /我的资源
 ```
 
@@ -455,6 +555,31 @@ BaiduPCS-Go mv /我的资源/1.mp4 /
 BaiduPCS-Go mv /我的资源/1.mp4 /我的资源/3.mp4
 ```
 
+## 分享文件/目录
+```
+BaiduPCS-Go share
+```
+
+### 设置分享文件/目录
+```
+BaiduPCS-Go share set <文件/目录1> <文件/目录2> ...
+BaiduPCS-Go share s <文件/目录1> <文件/目录2> ...
+```
+
+### 列出已分享文件/目录
+```
+BaiduPCS-Go share list
+BaiduPCS-Go share l
+```
+
+### 取消分享文件/目录
+```
+BaiduPCS-Go share cancel <shareid_1> <shareid_2> ...
+BaiduPCS-Go share c <shareid_1> <shareid_2> ...
+```
+
+目前只支持通过分享id (shareid) 来取消分享.
+
 ## 离线下载
 ```
 BaiduPCS-Go offlinedl
@@ -463,6 +588,8 @@ BaiduPCS-Go od
 ```
 
 离线下载支持http/https/ftp/电驴/磁力链协议
+
+离线下载同时进行的任务数量有限, 超出限制的部分将无法添加.
 
 ### 添加离线下载任务
 ```
@@ -489,6 +616,9 @@ BaiduPCS-Go offlinedl cancel 任务ID1 任务ID2 ...
 ### 删除离线下载任务
 ```
 BaiduPCS-Go offlinedl delete 任务ID1 任务ID2 ...
+
+# 清空离线下载任务记录, 程序不会进行二次确认, 谨慎操作!!!
+BaiduPCS-Go offlinedl delete -all
 ```
 
 #### 例子
@@ -506,11 +636,33 @@ BaiduPCS-Go offlinedl query 12345
 BaiduPCS-Go offlinedl cancel 12345
 ```
 
+## 显示程序环境变量
+```
+BaiduPCS-Go env
+```
+
+BAIDUPCS_GO_CONFIG_DIR: 为具体的存储目录,
+
+BAIDUPCS_GO_VERBOSE: 是否启用调试.
+
 ## 显示和修改程序配置项
 ```
+# 显示配置
 BaiduPCS-Go config
+
+# 设置配置
 BaiduPCS-Go config set
 ```
+
+注意: v3.5 以后, 程序对配置文件储存路径的寻找做了调整, 配置文件所在的目录可以是程序本身所在目录, 也可以是家目录.
+
+配置文件所在的目录为家目录的情况:
+
+Windows: `%APPDATA%\BaiduPCS-Go`
+
+其他操作系统: `$HOME/.config/BaiduPCS-Go`
+
+可通过设置环境变量 `BAIDUPCS_GO_CONFIG_DIR`, 指定配置文件存放的目录.
 
 #### 例子
 ```
@@ -625,6 +777,10 @@ cli交互模式下, 运行命令 `config set -max_parallel 250` 将下载最大�
 
 运行命令 `quit` 或 `exit` 或 组合键 `Ctrl+C` 或 组合键 `Ctrl+D`
 
+# 已知问题
+
+* 分片上传文件时, 当文件分片数大于1, 网盘端最终计算所得的md5值和本地的不一致, 这可能是百度网盘的bug, 测试把上传的文件下载到本地后，对比md5值是匹配的. 可通过秒传的原理来修复md5值.
+
 # 常见问题
 
 参见 [常见问题](https://github.com/iikira/BaiduPCS-Go/wiki/%E5%B8%B8%E8%A7%81%E9%97%AE%E9%A2%98)
@@ -646,6 +802,6 @@ QQ群: 178324706
 
 如果你愿意.
 
-|支付宝|
-|:-----:|
-|![alipay](./assets/donate/alipay.jpg)|
+|支付宝|微信|
+|:-----:|:-----:|
+|![alipay](https://github.com/iikira/BaiduPCS-Go/raw/master/assets/donate/alipay.jpg)|![weixin](https://github.com/iikira/BaiduPCS-Go/raw/master/assets/donate/weixin.png)|
